@@ -302,16 +302,16 @@ def init_session_state():
         st.session_state.data_mode = saved_mode
 
     # 2. Selected persona
-    saved_persona = qp.get("persona", "rapid_reentry")
+    saved_persona = qp.get("persona", "high_activity")
     if saved_persona not in SAMPLE_PERSONAS:
-        saved_persona = "rapid_reentry"
+        saved_persona = "high_activity"
     if "selected_persona_key" not in st.session_state:
         st.session_state.selected_persona_key = saved_persona
 
     # 3. Selected rule
-    saved_rule = qp.get("rule", "cool_off")
+    saved_rule = qp.get("rule", "activity_ceiling")
     if saved_rule not in RULES_CATALOG:
-        saved_rule = "cool_off"
+        saved_rule = "activity_ceiling"
     if "selected_rule_id" not in st.session_state:
         st.session_state.selected_rule_id = saved_rule
 
@@ -405,6 +405,18 @@ with st.sidebar:
         is_synthetic = False
         dataset_label = "Custom Uploaded Tradebook"
         dataset_description = "User-supplied completed trades CSV"
+
+        st.markdown(
+            """
+            <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; padding: 0.75rem 0.9rem; font-size: 0.78rem; color: #cbd5e1; margin-bottom: 0.85rem; line-height: 1.45;">
+                <strong style="color: #38bdf8;">📋 CSV Compatibility Notice:</strong><br/>
+                • Must include all <strong>10 required columns</strong> (<code>trade_id</code>, <code>date</code>, <code>entry_time</code>, <code>exit_time</code>, <code>symbol</code>, <code>quantity</code>, <code>entry_price</code>, <code>exit_price</code>, <code>charges</code>, <code>is_expiry_day</code>).<br/>
+                • Must represent <strong>pre-matched, completed, long-only, same-day round-trip trades</strong> (short trades, multi-day/overnight holds, and partial fills are not supported).<br/>
+                • <strong>Raw broker order/fill logs</strong> (e.g. Zerodha Kite, Groww, AngelOne) export separate execution rows and usually require conversion/matching into round-trip trades before upload.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         uploaded_file = st.file_uploader(
             "Upload Tradebook CSV",
@@ -508,7 +520,9 @@ with st.sidebar:
                 st.session_state.selected_rule_id = st.query_params.get("rule")
         else:
             st.session_state.rule_confirmed = False
-            st.session_state.selected_rule_id = "cool_off"  # Reset to default
+            st.session_state.selected_rule_id = (
+                "activity_ceiling" if current_dataset_id == "sample_high_activity" else "cool_off"
+            )
             st.query_params["committed"] = "0"
             st.query_params["dataset_id"] = current_dataset_id
 
@@ -561,8 +575,8 @@ with st.sidebar:
     ):
         st.query_params.clear()
         st.session_state.data_mode = "sample"
-        st.session_state.selected_persona_key = "rapid_reentry"
-        st.session_state.selected_rule_id = "cool_off"
+        st.session_state.selected_persona_key = "high_activity"
+        st.session_state.selected_rule_id = "activity_ceiling"
         st.session_state.rule_confirmed = False
         st.session_state.active_dataset_id = None
         st.rerun()

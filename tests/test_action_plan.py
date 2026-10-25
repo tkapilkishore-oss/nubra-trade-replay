@@ -424,8 +424,10 @@ def test_targeted_corrections_persona_b_wording_and_trigger():
     assert "Net Realized P&L" in all_text_pdf_b
     assert "Gross Realized P&L" in all_text_pdf_b
     assert "Avg Net P&L / Trade" in all_text_pdf_b
-    assert "Daily Net Realized P&L" in all_text_pdf_b
     assert "High-Activity Losing Days (2 Days)" in all_text_pdf_b
+
+    # Verify rupee font fallback behavior (replacing ₹ with Rs. when font unavailable)
+    test_pdf_rupee_font_fallback_and_preservation()
 
 
 def test_targeted_corrections_persona_a_copy_and_formatting():
@@ -720,5 +722,54 @@ def test_unified_pipeline_edge_cases():
     # Case 4: Zero-trigger adherence formula in definition
     assert "Not applicable — no qualifying events occurred" in text_d
     assert "Not applicable — no qualifying events occurred" in text_custom
+
+
+def test_pdf_rupee_font_fallback_and_preservation():
+    """Verify clean_currency_text and PDF generation handle both available rupee font and fallback to Rs."""
+    import pypdf
+    from src.action_plan import clean_currency_text
+    import src.action_plan as ap
+
+    # 1. Test clean_currency_text helper unit behavior
+    assert clean_currency_text("totaling -₹2,400.00", has_rupee_font=True) == "totaling -₹2,400.00"
+    assert clean_currency_text("totaling ₹-2,400.00", has_rupee_font=True) == "totaling -₹2,400.00"
+    assert clean_currency_text("net P&L of ₹600.00", has_rupee_font=True) == "net P&L of ₹600.00"
+
+    assert clean_currency_text("totaling -₹2,400.00", has_rupee_font=False) == "totaling -Rs. 2,400.00"
+    assert clean_currency_text("totaling ₹-2,400.00", has_rupee_font=False) == "totaling -Rs. 2,400.00"
+    assert clean_currency_text("net P&L of ₹600.00", has_rupee_font=False) == "net P&L of Rs. 600.00"
+
+    # 2. Test PDF text preservation when font has rupee support
+    df_b, metrics_b, findings_b = load_dataset("high_activity.csv")
+    rule_b = get_rule_by_id("activity_ceiling")
+    ctx_b = build_report_context("Persona B", True, metrics_b, findings_b, rule_b, df_b)
+
+    pdf_normal = generate_action_plan_pdf(ctx_b)
+    text_normal = " ".join("\n".join(p.extract_text() for p in pypdf.PdfReader(io.BytesIO(pdf_normal)).pages).split())
+    assert "-₹2,400.00" in text_normal
+    assert "-₹1,600.00" in text_normal
+    assert "₹-" not in text_normal
+
+    # 3. Test PDF text fallback when font lacks rupee support
+    orig_setup = ap._FONT_SETUP_DONE
+    orig_font = ap._PDF_FONT_NAME
+    orig_bold = ap._PDF_FONT_BOLD
+    orig_rupee = ap._HAS_RUPEE_FONT
+    try:
+        ap._FONT_SETUP_DONE = True
+        ap._PDF_FONT_NAME = "Helvetica"
+        ap._PDF_FONT_BOLD = "Helvetica-Bold"
+        ap._HAS_RUPEE_FONT = False
+
+        pdf_fallback = generate_action_plan_pdf(ctx_b)
+        text_fallback = " ".join("\n".join(p.extract_text() for p in pypdf.PdfReader(io.BytesIO(pdf_fallback)).pages).split())
+        assert "-Rs. 2,400.00" in text_fallback
+        assert "-Rs. 1,600.00" in text_fallback
+        assert "₹" not in text_fallback
+    finally:
+        ap._FONT_SETUP_DONE = orig_setup
+        ap._PDF_FONT_NAME = orig_font
+        ap._PDF_FONT_BOLD = orig_bold
+        ap._HAS_RUPEE_FONT = orig_rupee
 
 

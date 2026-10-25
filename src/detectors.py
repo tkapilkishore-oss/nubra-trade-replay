@@ -369,10 +369,12 @@ def generate_ranked_findings(df: pd.DataFrame) -> List[Finding]:
 
         evidence_rows = []
         for d in losing_days:
+            pnl_val = d["net_pnl"]
+            formatted_daily_pnl = f"-₹{abs(pnl_val):,.2f}" if pnl_val < 0 else f"₹{pnl_val:,.2f}"
             evidence_rows.append({
                 "Date": d["date"],
                 "Trade Count": d["trade_count"],
-                "Daily Net P&L": f"₹{d['net_pnl']:,.2f}",
+                "Daily Net P&L": formatted_daily_pnl,
                 "Baseline Median": median_base,
                 "Threshold": threshold,
             })
@@ -381,6 +383,7 @@ def generate_ranked_findings(df: pd.DataFrame) -> List[Finding]:
         # High-activity losing days carry significant capital risk
         score = 1200.0 + (count_days * 100.0) + min(abs(total_pnl) / 10.0, 800.0)
 
+        total_pnl_str = f"-₹{abs(total_pnl):,.2f}" if total_pnl < 0 else f"₹{total_pnl:,.2f}"
         findings.append(
             Finding(
                 detector_id="high_activity",
@@ -388,7 +391,7 @@ def generate_ranked_findings(df: pd.DataFrame) -> List[Finding]:
                 summary=(
                     f"Identified {count_days} day{'s' if count_days != 1 else ''} with unusually high trading activity "
                     f"(≥ {threshold:.0f} trades vs baseline median of {median_base:.0f} trades/day) that closed with net losses "
-                    f"totaling ₹{total_pnl:,.2f}."
+                    f"totaling {total_pnl_str}."
                 ),
                 severity="warning",
                 metric_label="Net P&L on Flagged Days",

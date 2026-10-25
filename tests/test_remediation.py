@@ -283,3 +283,58 @@ def test_browser_persistence_helpers():
     # Corrupted / invalid input returns None safely without raising an exception
     assert decompress_csv_data("not_valid_base64_or_zlib!!!") is None
     assert decompress_csv_data("") is None
+
+    # Fresh visit session-state defaults & dataset-switching resolution
+    # Executed in an isolated subprocess to prevent Streamlit's runtime script loader
+    # from reloading application modules and causing cross-test class identity divergence.
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    app_path = str(Path(__file__).resolve().parent.parent / "app.py")
+    test_subproc_code = f"""
+from streamlit.testing.v1 import AppTest
+
+# 1. Fresh visit defaults
+at_fresh = AppTest.from_file(r"{app_path}")
+at_fresh.run()
+assert not at_fresh.exception
+assert at_fresh.session_state.get("selected_persona_key") == "high_activity"
+assert at_fresh.session_state.get("selected_rule_id") == "activity_ceiling"
+assert at_fresh.session_state.get("rule_confirmed") is False
+assert at_fresh.session_state.get("active_dataset_id") == "sample_high_activity"
+
+# 2. Explicit persona query parameter
+at_persona_a = AppTest.from_file(r"{app_path}")
+at_persona_a.query_params["persona"] = "rapid_reentry"
+at_persona_a.run()
+assert not at_persona_a.exception
+assert at_persona_a.session_state.get("selected_persona_key") == "rapid_reentry"
+assert at_persona_a.session_state.get("selected_rule_id") == "cool_off"
+
+# 3. Dataset-change reset: transitioning to high_activity selects activity_ceiling
+at_reset_b = AppTest.from_file(r"{app_path}")
+at_reset_b.session_state["active_dataset_id"] = "sample_rapid_reentry"
+at_reset_b.session_state["selected_rule_id"] = "cool_off"
+at_reset_b.session_state["rule_confirmed"] = True
+at_reset_b.query_params["persona"] = "high_activity"
+at_reset_b.run()
+assert not at_reset_b.exception
+assert at_reset_b.session_state.get("active_dataset_id") == "sample_high_activity"
+assert at_reset_b.session_state.get("selected_rule_id") == "activity_ceiling"
+assert at_reset_b.session_state.get("rule_confirmed") is False
+
+# 4. Dataset-change reset: transitioning to other personas selects cool_off
+at_reset_c = AppTest.from_file(r"{app_path}")
+at_reset_c.session_state["active_dataset_id"] = "sample_high_activity"
+at_reset_c.session_state["selected_rule_id"] = "activity_ceiling"
+at_reset_c.session_state["rule_confirmed"] = True
+at_reset_c.query_params["persona"] = "clean_trader"
+at_reset_c.run()
+assert not at_reset_c.exception
+assert at_reset_c.session_state.get("active_dataset_id") == "sample_clean_trader"
+assert at_reset_c.session_state.get("selected_rule_id") == "cool_off"
+assert at_reset_c.session_state.get("rule_confirmed") is False
+"""
+    res = subprocess.run([sys.executable, "-c", test_subproc_code], capture_output=True, text=True)
+    assert res.returncode == 0, f"AppTest session-state regression failed: {res.stderr}"

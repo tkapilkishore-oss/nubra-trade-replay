@@ -166,10 +166,16 @@ def format_currency_text(val: float, has_rupee_font: bool = True) -> str:
     return f"{sign}{prefix}{abs(val):,.2f}"
 
 
-def clean_currency_text(text: Any) -> str:
-    """Format negative Indian rupee amounts consistently as -₹2,400.00, never ₹-2,400.00."""
+def clean_currency_text(text: Any, has_rupee_font: bool = True) -> str:
+    """Format negative Indian rupee amounts consistently as -₹2,400.00, never ₹-2,400.00.
+    When has_rupee_font is False, replaces the rupee glyph (₹) with 'Rs. ' to prevent
+    missing glyph rectangles in environments lacking unicode 0x20B9 font support.
+    """
     s = str(text)
-    return s.replace("₹-", "-₹").replace("Rs. -", "-Rs. ")
+    s = s.replace("₹-", "-₹").replace("Rs. -", "-Rs. ")
+    if not has_rupee_font:
+        s = s.replace("-₹", "-Rs. ").replace("+₹", "+Rs. ").replace("₹", "Rs. ")
+    return s
 
 
 def safe_text(text: str) -> str:
@@ -641,7 +647,7 @@ def generate_action_plan_pdf(
     behavioral_findings = [f for f in findings if f.detector_id not in ("clean_baseline", "baseline_clean")]
 
     if explanation_mode == "matched" and matching_finding is not None:
-        clean_summary = clean_currency_text(matching_finding.summary).strip()
+        clean_summary = clean_currency_text(matching_finding.summary, has_rupee).strip()
         if clean_summary.startswith("Identified "):
             clean_summary = "The review identified " + clean_summary[len("Identified "):]
         if not clean_summary.endswith('.'):
@@ -681,9 +687,10 @@ def generate_action_plan_pdf(
             other_names = ", ".join(f"{safe_text(f.title)}" for f in other_findings)
             why_text += f"<br/><br/><i>Additional behavioral patterns detected in this review: {other_names}.</i>"
     elif explanation_mode == "user_custom" and primary_behavioral is not None:
+        clean_metric_val = clean_currency_text(primary_behavioral.metric_value, has_rupee)
         why_text = (
             f"The primary behavioral pattern detected in your review was <b>{safe_text(primary_behavioral.title)}</b> "
-            f"({safe_text(primary_behavioral.metric_label)}: {safe_text(primary_behavioral.metric_value)}). "
+            f"({safe_text(primary_behavioral.metric_label)}: {safe_text(clean_metric_val)}). "
             f"However, you have chosen to commit to <b>{safe_text(active_rule['name'])}</b> ({safe_text(active_rule['category'])}) "
             f"as your personal focus for the next 30 days. The supporting evidence below summarizes the observed pattern in your tradebook."
         )
@@ -781,7 +788,7 @@ def generate_action_plan_pdf(
                         Paragraph(f"<b>{row.get('Trade Count', '')} trades</b>", table_cell_bold),
                         Paragraph(f"{row.get('Baseline Median', '')} trades/day", table_cell),
                         Paragraph(f"{row.get('Threshold', '')} trades/day", table_cell),
-                        Paragraph(clean_currency_text(str(row.get("Daily Net P&L", ""))), table_cell),
+                        Paragraph(clean_currency_text(str(row.get("Daily Net P&L", "")), has_rupee), table_cell),
                     ])
                 ev_table = Table(ev_data, colWidths=[97, 100, 95, 95, 100])
                 ev_table.setStyle(
@@ -820,8 +827,8 @@ def generate_action_plan_pdf(
                     ev_data.append([
                         Paragraph(str(row.get("Group", "")), table_cell_bold),
                         Paragraph(str(row.get("Trade Count", "")), table_cell),
-                        Paragraph(clean_currency_text(str(row.get("Total Net P&L", ""))), table_cell),
-                        Paragraph(clean_currency_text(str(row.get("Avg Net P&L / Trade", ""))), table_cell_bold),
+                        Paragraph(clean_currency_text(str(row.get("Total Net P&L", "")), has_rupee), table_cell),
+                        Paragraph(clean_currency_text(str(row.get("Avg Net P&L / Trade", "")), has_rupee), table_cell_bold),
                     ])
                 ev_table = Table(ev_data, colWidths=[140, 100, 120, 127])
                 ev_table.setStyle(

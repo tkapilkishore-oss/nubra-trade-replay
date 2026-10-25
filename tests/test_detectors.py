@@ -73,6 +73,16 @@ def test_high_activity_persona():
     # High-activity should be the top-ranked finding for this persona
     assert findings[0].detector_id == "high_activity"
 
+    # Regression check: ensure negative total is displayed as -₹2,400.00, never ₹-2,400.00
+    ha_finding = findings[0]
+    assert "-₹2,400.00" in ha_finding.summary
+    assert "₹-" not in ha_finding.summary
+    assert ha_finding.metric_value == "-₹2,400.00"
+    if ha_finding.evidence_df is not None and not ha_finding.evidence_df.empty:
+        for pnl_entry in ha_finding.evidence_df["Daily Net P&L"]:
+            assert "₹-" not in pnl_entry
+            assert str(pnl_entry).startswith("-₹")
+
 
 def test_expiry_pattern_persona():
     df = load_persona("expiry_pattern.csv")
