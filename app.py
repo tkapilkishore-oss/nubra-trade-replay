@@ -373,9 +373,8 @@ with st.sidebar:
             "Select Sample Trader Persona:",
             options=list(persona_options.keys()),
             format_func=lambda k: persona_options[k],
-            index=list(persona_options.keys()).index(st.session_state.selected_persona_key),
+            key="selected_persona_key",
         )
-        st.session_state.selected_persona_key = selected_key
         st.query_params["persona"] = selected_key
         persona_info = SAMPLE_PERSONAS[selected_key]
         dataset_label = persona_info["name"]
@@ -525,6 +524,7 @@ with st.sidebar:
             )
             st.query_params["committed"] = "0"
             st.query_params["dataset_id"] = current_dataset_id
+            st.query_params.pop("rule", None)
 
 
     st.markdown("---")

@@ -401,39 +401,110 @@ assert "Daily Activity Checkpoint" in docx_text
 assert "However, you have chosen to commit to Daily Activity Checkpoint" in docx_text
 assert "Rapid Re-entry" in docx_text
 
-# 5. In-session dataset switching: verify previous committed rule does NOT leak
-for target_persona, expected_suggested_rule in [
-    ("high_activity", "activity_ceiling"),
-    ("expiry_pattern", "expiry_sizing"),
-    ("clean_trader", "maintain_discipline"),
-    ("tiny_sample", "maintain_discipline"),
-]:
-    # Start from an active session with Persona A and committed alternative rule
-    at_switch = AppTest.from_file(r"{app_path}")
-    at_switch.query_params["persona"] = "rapid_reentry"
-    at_switch.run()
-    sb_r = [s for s in at_switch.selectbox if "Select One Rule" in s.label][0]
-    sb_r.select("activity_ceiling")
-    at_switch.run()
-    [b for b in at_switch.button if "Commit to Monitoring" in b.label][0].click()
-    at_switch.run()
-    assert at_switch.session_state.get("rule_confirmed") is True
-    assert at_switch.session_state.get("selected_rule_id") == "activity_ceiling"
+# 5. Immediate single-interaction persona switching & committed rule isolation
+at_switch = AppTest.from_file(r"{app_path}")
+at_switch.query_params["persona"] = "rapid_reentry"
+at_switch.run()
+assert at_switch.session_state.get("selected_persona_key") == "rapid_reentry"
+assert at_switch.session_state.get("active_dataset_id") == "sample_rapid_reentry"
+full_md_a = " ".join(m.value for m in at_switch.markdown)
+assert "Rapid Re-entry Identified (12 Trades)" in full_md_a
 
-    # Switch the dataset selector in-session to the new persona
-    sb_persona = [s for s in at_switch.selectbox if "Select Sample Trader Persona" in s.label][0]
-    sb_persona.select(target_persona)
-    at_switch.run()
-    assert not at_switch.exception
-    assert at_switch.session_state.get("selected_persona_key") == target_persona
-    assert at_switch.session_state.get("rule_confirmed") is False, f"{{target_persona}} leaked rule_confirmed=True"
-    assert at_switch.session_state.get("selected_rule_id") == expected_suggested_rule, (
-        f"{{target_persona}} leaked previous rule; expected {{expected_suggested_rule}}, got {{at_switch.session_state.get('selected_rule_id')}}"
-    )
-    sb_rule_new = [s for s in at_switch.selectbox if "Select One Rule" in s.label][0]
-    assert sb_rule_new.value == expected_suggested_rule, (
-        f"{{target_persona}} selectbox leaked previous rule; expected {{expected_suggested_rule}}, got {{sb_rule_new.value}}"
-    )
+# Commit an alternative rule (activity_ceiling) on Persona A
+sb_r = [s for s in at_switch.selectbox if "Select One Rule" in s.label][0]
+sb_r.select("activity_ceiling")
+at_switch.run()
+[b for b in at_switch.button if "Commit to Monitoring" in b.label][0].click()
+at_switch.run()
+assert at_switch.session_state.get("rule_confirmed") is True
+assert at_switch.session_state.get("selected_rule_id") == "activity_ceiling"
+
+# Step A: Switch from committed Persona A to Persona B with EXACTLY ONE selectbox interaction
+sb_persona = [s for s in at_switch.selectbox if "Select Sample Trader Persona" in s.label][0]
+sb_persona.select("high_activity")
+at_switch.run()
+assert not at_switch.exception
+
+# Assert all Persona B elements updated immediately on that single rerun (metrics, findings, dataset ID, rule)
+assert at_switch.session_state.get("selected_persona_key") == "high_activity"
+assert at_switch.session_state.get("active_dataset_id") == "sample_high_activity"
+assert at_switch.session_state.get("selected_rule_id") == "activity_ceiling"
+assert at_switch.session_state.get("rule_confirmed") is False
+assert at_switch.query_params.get("persona") == "high_activity"
+assert at_switch.query_params.get("committed") == "0"
+assert at_switch.query_params.get("rule") is None
+
+full_md_b = " ".join(m.value for m in at_switch.markdown)
+assert "High-Activity Losing Days (2 Days)" in full_md_b
+assert "-₹2,400.00" in full_md_b
+assert "Rapid Re-entry Identified (12 Trades)" not in full_md_b
+
+sb_rule_b = [s for s in at_switch.selectbox if "Select One Rule" in s.label][0]
+assert sb_rule_b.value == "activity_ceiling"
+
+# Step B: Switch to additional Persona C (expiry_pattern) with exactly one interaction in the same session
+sb_persona = [s for s in at_switch.selectbox if "Select Sample Trader Persona" in s.label][0]
+sb_persona.select("expiry_pattern")
+at_switch.run()
+assert not at_switch.exception
+assert at_switch.session_state.get("selected_persona_key") == "expiry_pattern"
+assert at_switch.session_state.get("active_dataset_id") == "sample_expiry_pattern"
+assert at_switch.session_state.get("selected_rule_id") == "expiry_sizing"
+assert at_switch.session_state.get("rule_confirmed") is False
+sb_rule_c = [s for s in at_switch.selectbox if "Select One Rule" in s.label][0]
+assert sb_rule_c.value == "expiry_sizing"
+
+# Step C: Switch to additional Persona D (clean_trader) with exactly one interaction in the same session
+sb_persona = [s for s in at_switch.selectbox if "Select Sample Trader Persona" in s.label][0]
+sb_persona.select("clean_trader")
+at_switch.run()
+assert not at_switch.exception
+assert at_switch.session_state.get("selected_persona_key") == "clean_trader"
+assert at_switch.session_state.get("active_dataset_id") == "sample_clean_trader"
+assert at_switch.session_state.get("selected_rule_id") == "maintain_discipline"
+assert at_switch.session_state.get("rule_confirmed") is False
+sb_rule_d = [s for s in at_switch.selectbox if "Select One Rule" in s.label][0]
+assert sb_rule_d.value == "maintain_discipline"
+
+# Step D: Switch to additional Persona E (tiny_sample) with exactly one interaction in the same session
+sb_persona = [s for s in at_switch.selectbox if "Select Sample Trader Persona" in s.label][0]
+sb_persona.select("tiny_sample")
+at_switch.run()
+assert not at_switch.exception
+assert at_switch.session_state.get("selected_persona_key") == "tiny_sample"
+assert at_switch.session_state.get("active_dataset_id") == "sample_tiny_sample"
+assert at_switch.session_state.get("selected_rule_id") == "maintain_discipline"
+assert at_switch.session_state.get("rule_confirmed") is False
+sb_rule_e = [s for s in at_switch.selectbox if "Select One Rule" in s.label][0]
+assert sb_rule_e.value == "maintain_discipline"
+
+# Step E: Verify the switched persona cleanly survives a browser refresh
+at_reload_p = AppTest.from_file(r"{app_path}")
+for k, v in at_switch.query_params.items():
+    at_reload_p.query_params[k] = v
+at_reload_p.run()
+assert not at_reload_p.exception
+assert at_reload_p.session_state.get("selected_persona_key") == "tiny_sample"
+assert at_reload_p.session_state.get("rule_confirmed") is False
+assert at_reload_p.session_state.get("selected_rule_id") == "maintain_discipline"
+
+# Step F: Stale dataset mismatch URL does not inherit committed state or stale rule
+at_mismatch = AppTest.from_file(r"{app_path}")
+at_mismatch.query_params["persona"] = "high_activity"
+at_mismatch.query_params["committed"] = "1"
+at_mismatch.query_params["dataset_id"] = "sample_rapid_reentry"
+at_mismatch.query_params["rule"] = "activity_ceiling"
+at_mismatch.run()
+assert not at_mismatch.exception
+assert at_mismatch.session_state.get("selected_persona_key") == "high_activity"
+assert at_mismatch.session_state.get("active_dataset_id") == "sample_high_activity"
+assert at_mismatch.session_state.get("rule_confirmed") is False
+assert at_mismatch.query_params.get("committed") == "0"
+assert at_mismatch.query_params.get("rule") is None
+assert at_mismatch.query_params.get("dataset_id") == "sample_high_activity"
+sb_rule_mismatch = [s for s in at_mismatch.selectbox if "Select One Rule" in s.label][0]
+assert sb_rule_mismatch.value == "activity_ceiling"
+assert at_mismatch.session_state.get("selected_rule_id") == "activity_ceiling"
 """
     res = subprocess.run([sys.executable, "-c", test_subproc_code], capture_output=True, text=True)
     assert res.returncode == 0, f"AppTest session-state regression failed: {res.stderr}"
