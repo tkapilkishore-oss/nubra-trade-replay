@@ -1,0 +1,576 @@
+[
+  {
+    "id": "TC001",
+    "title": "Load a synthetic persona and view the dashboard",
+    "description": "This verifies that a user can choose a synthetic sample trader persona and see the dashboard load with portfolio summary, findings, and trade explorer content.",
+    "category": "Data Source Selection",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the synthetic sample trader data source"
+      },
+      {
+        "type": "action",
+        "description": "Choose a persona from the available options"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard shows performance metrics and trade analysis content"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify findings and trade explorer content are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Upload a completed tradebook and view the dashboard",
+    "description": "This verifies that a user can upload a completed tradebook CSV and see the dashboard load with analysis results.",
+    "category": "Data Source Selection",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the completed tradebook CSV upload data source"
+      },
+      {
+        "type": "action",
+        "description": "Upload a valid completed tradebook CSV file"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard shows performance metrics and trade analysis content"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the trade log or explorer content is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Load an uploaded tradebook and inspect the analyzed dashboard",
+    "description": "This test verifies that a user can upload a completed tradebook CSV and see the app accept it and render the resulting analysis views.",
+    "category": "Tradebook and Activity Explorer",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the uploaded tradebook data source"
+      },
+      {
+        "type": "action",
+        "description": "Upload a valid completed tradebook CSV file"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the uploaded dataset is accepted"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard displays performance metrics and trade findings"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Review overall portfolio performance metrics",
+    "description": "This verifies that the dashboard summarizes the loaded tradebook with the key portfolio performance metrics users need.",
+    "category": "Portfolio Performance Overview",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the synthetic sample trader data source"
+      },
+      {
+        "type": "action",
+        "description": "Choose a persona from the available options"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard shows net performance, win rate, completed trade count, average trade performance, and charges metrics"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Inspect a ranked finding and its supporting evidence",
+    "description": "This verifies that a user can open a ranked behavioral finding and review the qualifying trades, calculations, and checklist that justify it.",
+    "category": "Evidence-Backed Pattern Findings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the synthetic sample trader data source"
+      },
+      {
+        "type": "action",
+        "description": "Choose a persona from the available options"
+      },
+      {
+        "type": "action",
+        "description": "Expand a ranked finding's evidence section"
+      },
+      {
+        "type": "action",
+        "description": "Expand the evaluated checklist for that finding"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify qualifying trade evidence is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the behavioral checklist is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Filter the completed trade log by outcome and expiry type",
+    "description": "This test verifies that a user can narrow the completed trade log using outcome and expiry filters and see the table update to matching trades only.",
+    "category": "Tradebook and Activity Explorer",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select a trader dataset"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the completed trade log view"
+      },
+      {
+        "type": "action",
+        "description": "Select a specific outcome filter"
+      },
+      {
+        "type": "action",
+        "description": "Select a specific expiry type filter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the trade log updates to show matching trades only"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify non-matching trades are no longer displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Review the supporting calculations behind a finding",
+    "description": "This verifies that opening a finding reveals trade-level calculations that explain why the pattern was surfaced.",
+    "category": "Evidence-Backed Pattern Findings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the synthetic sample trader data source"
+      },
+      {
+        "type": "action",
+        "description": "Choose a persona from the available options"
+      },
+      {
+        "type": "action",
+        "description": "Expand a ranked finding's evidence section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify trade-level calculations are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify qualifying trade evidence is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Review daily breakdown and pacing for a loaded dataset",
+    "description": "This test verifies that a user can switch to the daily breakdown view and review the activity summary by day for a loaded trader dataset.",
+    "category": "Tradebook and Activity Explorer",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select a trader dataset"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the daily breakdown and pacing view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the daily activity summary is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the breakdown reflects activity grouped by day"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Review evidence and checklist for a ranked finding",
+    "description": "This test verifies that a user can open a ranked finding and inspect the supporting evidence table and checklist that justify the pattern.",
+    "category": "Tradebook and Activity Explorer",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select a trader dataset"
+      },
+      {
+        "type": "action",
+        "description": "Open a ranked finding"
+      },
+      {
+        "type": "action",
+        "description": "Expand the evidence table"
+      },
+      {
+        "type": "action",
+        "description": "Expand the supporting checklist"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the evidence-backed trade details are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the checklist guidance is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Compare two synthetic personas",
+    "description": "This verifies that switching between synthetic personas reloads the dashboard with a different trade profile and analysis content.",
+    "category": "Data Source Selection",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the synthetic sample trader data source"
+      },
+      {
+        "type": "action",
+        "description": "Choose one persona from the available options"
+      },
+      {
+        "type": "action",
+        "description": "Choose a different persona from the available options"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard updates to a different loaded dataset"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the portfolio summary and findings reflect the selected persona"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC011",
+    "title": "Commit to a recommended habit rule for next month",
+    "description": "This test verifies that a user can select a recommended rule and commit to monitoring it next month, resulting in the commitment being recorded in the session.",
+    "category": "Next-Month Habit Commitment",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select a trader dataset"
+      },
+      {
+        "type": "action",
+        "description": "Select a recommended rule from the list"
+      },
+      {
+        "type": "action",
+        "description": "Commit to monitoring the selected rule next month"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the commitment is recorded in the session"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected rule is shown as committed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC012",
+    "title": "Commit to a habit rule and download the action plan",
+    "description": "This verifies that a user can choose a recommended habit rule, commit to it for next month, and download the 30-day markdown action plan.",
+    "category": "Evidence-Backed Pattern Findings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the synthetic sample trader data source"
+      },
+      {
+        "type": "action",
+        "description": "Choose a persona from the available options"
+      },
+      {
+        "type": "action",
+        "description": "Select a recommended habit rule"
+      },
+      {
+        "type": "action",
+        "description": "Commit to monitoring it next month"
+      },
+      {
+        "type": "action",
+        "description": "Download the 30-day action plan"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the habit commitment is recorded in the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the action plan download is available"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC013",
+    "title": "Compare findings across different synthetic personas",
+    "description": "This test verifies that a user can switch between synthetic personas and see the dashboard update to a different set of summary metrics and findings.",
+    "category": "Tradebook and Activity Explorer",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the synthetic sample trader data source"
+      },
+      {
+        "type": "action",
+        "description": "Choose one persona from the available sample traders"
+      },
+      {
+        "type": "action",
+        "description": "Choose a different persona from the available sample traders"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard updates to a different persona's performance summary"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the findings content changes for the selected persona"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC014",
+    "title": "Download the 30-day action plan after selecting a rule",
+    "description": "This test verifies that a user can select a recommended rule and download the markdown action plan for the next 30 days.",
+    "category": "Next-Month Habit Commitment",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select a trader dataset"
+      },
+      {
+        "type": "action",
+        "description": "Select a recommended rule from the list"
+      },
+      {
+        "type": "action",
+        "description": "Download the 30-day action plan in PDF or Word format"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the action plan download is initiated"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the PDF and Word action plans are available for download"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC015",
+    "title": "No finding appears when the dataset has no pattern",
+    "description": "This verifies that when the loaded dataset does not trigger a behavioral pattern, the findings area stays empty or shows no qualifying finding.",
+    "category": "Evidence-Backed Pattern Findings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the synthetic sample trader data source"
+      },
+      {
+        "type": "action",
+        "description": "Choose a persona from the available options that does not trigger a pattern"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no qualifying finding is surfaced"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC016",
+    "title": "Handle a dataset with no clear pattern findings",
+    "description": "This test verifies that the app shows an empty or no-pattern state when a loaded dataset does not produce ranked findings.",
+    "category": "Tradebook and Activity Explorer",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Load a dataset with no clear pattern findings"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an empty state or no-pattern message is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard still shows the available trade summary"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC017",
+    "title": "Reset transient state when switching datasets",
+    "description": "This verifies that session-only data such as a prior habit commitment or uploaded tradebook is cleared when the user switches to a different dataset source.",
+    "category": "Data Source Selection",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the completed tradebook CSV upload data source"
+      },
+      {
+        "type": "action",
+        "description": "Upload a valid completed tradebook CSV file"
+      },
+      {
+        "type": "action",
+        "description": "Select the synthetic sample trader data source"
+      },
+      {
+        "type": "action",
+        "description": "Choose a persona from the available options"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the previously loaded uploaded dataset is no longer shown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard reflects the newly selected persona dataset"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC018",
+    "title": "Reject unsupported trade types in an uploaded tradebook",
+    "description": "This test verifies that an uploaded tradebook containing unsupported overnight or short-first option trades is rejected with validation feedback.",
+    "category": "Tradebook and Activity Explorer",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the uploaded tradebook data source"
+      },
+      {
+        "type": "action",
+        "description": "Upload a tradebook containing unsupported overnight or short-first trades"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a validation error is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the invalid tradebook is not loaded into the dashboard"
+      }
+    ],
+    "priority": "Low"
+  }
+]

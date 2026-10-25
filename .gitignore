@@ -1,0 +1,26 @@
+# Virtual Environments
+.venv/
+venv/
+ENV/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# OS & Editor Metadata
+.DS_Store
+.idea/
+.vscode/
+
+# Local Secrets & Configs
+.env
+.env.*
+*.pem
+*.key
+.streamlit/secrets.toml
+
+# TestSprite Temporary Files & Scratch
+testsprite_tests/tmp/
+scratch/

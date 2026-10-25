@@ -1,0 +1,100 @@
+{
+  "persona": "Persona F \u2014 The Inconsistent Trader",
+  "description": "A trader with inconsistent discipline. Mixes wins and losses unevenly, occasionally re-enters rapidly after a loss, and has two days where trade volume spikes well above the norm \u2014 both of which end in losses. Trades on both expiry and non-expiry days.",
+  "csv_file": "manual_upload_persona_f.csv",
+  "schema_valid": true,
+  "row_count": 30,
+  "active_days": 10,
+  "summary_metrics": {
+    "total_trades": 30,
+    "winning_trades": 11,
+    "losing_trades": 19,
+    "breakeven_trades": 0,
+    "win_rate": 36.7,
+    "total_gross_pnl": -6437.5,
+    "total_charges": 1168.0,
+    "total_net_pnl": -7605.5,
+    "avg_net_pnl": -253.52,
+    "profit_factor": 0.56,
+    "is_small_sample": false
+  },
+  "detector_1_rapid_reentry": {
+    "has_pattern": true,
+    "flagged_count": 2,
+    "flagged_trade_ids": [
+      "F006",
+      "F019"
+    ],
+    "flagged_total_net_pnl": 183.0,
+    "preceding_losses_total_net_pnl": -1883.0,
+    "threshold_minutes": 15,
+    "flagged_details": [
+      {
+        "trade_id": "F006",
+        "entry_time": "09:55:00",
+        "gap_minutes": 5.0,
+        "net_pnl": 715.0,
+        "preceding_trade_id": "F005",
+        "preceding_exit_time": "09:50:00",
+        "preceding_net_pnl": -785.0
+      },
+      {
+        "trade_id": "F019",
+        "entry_time": "10:30:00",
+        "gap_minutes": 10.0,
+        "net_pnl": -532.0,
+        "preceding_trade_id": "F018",
+        "preceding_exit_time": "10:20:00",
+        "preceding_net_pnl": -1098.0
+      }
+    ]
+  },
+  "detector_2_high_activity": {
+    "has_pattern": true,
+    "insufficient_days": false,
+    "baseline_median": 2.0,
+    "baseline_mean": 3.0,
+    "threshold": 4.0,
+    "total_losing_days_pnl": -9275.0,
+    "high_activity_losing_days": [
+      {
+        "date": "2026-09-10",
+        "trade_count": 6,
+        "net_pnl": -4708.0,
+        "trade_ids": [
+          "F010",
+          "F011",
+          "F012",
+          "F013",
+          "F014",
+          "F015"
+        ]
+      },
+      {
+        "date": "2026-09-24",
+        "trade_count": 6,
+        "net_pnl": -4567.0,
+        "trade_ids": [
+          "F025",
+          "F026",
+          "F027",
+          "F028",
+          "F029",
+          "F030"
+        ]
+      }
+    ],
+    "high_activity_profitable_days": []
+  },
+  "detector_3_expiry_performance": {
+    "has_pattern": true,
+    "has_both_groups": true,
+    "expiry_count": 17,
+    "expiry_total_pnl": -7730.0,
+    "expiry_avg_pnl": -454.71,
+    "non_expiry_count": 13,
+    "non_expiry_total_pnl": 124.5,
+    "non_expiry_avg_pnl": 9.58,
+    "avg_pnl_difference": -464.28
+  }
+}

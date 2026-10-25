@@ -1,0 +1,101 @@
+{
+  "rapid_reentry.csv": {
+    "data_nature": "synthetic_test_scenario",
+    "expected_trades": 24,
+    "total_trades": 24,
+    "expected_rapid_reentry_trades": 12,
+    "qualifying_trade_ids": [
+      "R013",
+      "R014",
+      "R015",
+      "R016",
+      "R017",
+      "R018",
+      "R019",
+      "R020",
+      "R021",
+      "R022",
+      "R023",
+      "R024"
+    ],
+    "preceding_loss_trade_ids": [
+      "R001",
+      "R002",
+      "R003",
+      "R004",
+      "R005",
+      "R006",
+      "R007",
+      "R008",
+      "R009",
+      "R010",
+      "R011",
+      "R012"
+    ],
+    "reentry_window_minutes_threshold": 15,
+    "actual_reentry_delay_minutes": 5,
+    "qualifying_trades_net_pnl": 600.0,
+    "preceding_losses_net_pnl": -1200.0,
+    "total_net_pnl": -600.0,
+    "note": "Synthetic test dataset: 12 pairs of trades across 12 consecutive calendar dates (Sep 1-12, 2026). Each initial losing trade (-100) is followed 5 minutes later by a rapid re-entry (+50). Demonstrates timing pattern without implying loss causation."
+  },
+  "high_activity.csv": {
+    "data_nature": "synthetic_test_scenario",
+    "expected_trades": 40,
+    "total_trades": 40,
+    "expected_busy_days": 2,
+    "busy_day_dates": [
+      "2026-09-05",
+      "2026-09-09"
+    ],
+    "busy_day_trade_count": 12,
+    "busy_day_daily_net_pnl": -1200.0,
+    "busy_days_total_net_pnl": -2400.0,
+    "expected_busy_losing_days": 2,
+    "expected_busy_profitable_days": 0,
+    "normal_days_count": 8,
+    "normal_day_trade_count": 2,
+    "normal_day_daily_net_pnl": 100.0,
+    "normal_days_total_net_pnl": 800.0,
+    "baseline_median_trades_per_day": 2.0,
+    "baseline_mean_trades_per_day": 4.0,
+    "total_net_pnl": -1600.0,
+    "note": "Synthetic test dataset: 10 mock trading dates (Sep 1-10, 2026) testing activity detection. 8 normal winning days (2 trades/day, net +100) and 2 high-activity losing days (12 trades/day, net -1200). Dates represent test iterations, not real exchange days."
+  },
+  "expiry_pattern.csv": {
+    "data_nature": "synthetic_test_scenario",
+    "expected_trades": 10,
+    "total_trades": 10,
+    "expiry_trades": 5,
+    "expiry_trades_count": 5,
+    "expiry_total_net_pnl": -1000.0,
+    "expiry_avg_net_pnl": -200.0,
+    "non_expiry_trades": 5,
+    "non_expiry_trades_count": 5,
+    "non_expiry_total_net_pnl": 500.0,
+    "non_expiry_avg_net_pnl": 100.0,
+    "total_net_pnl": -500.0,
+    "note": "Synthetic test dataset: 5 non-expiry winning trades (+100 each) and 5 expiry losing trades (-200 each). Tested as an observed association without claiming expiry caused the losses."
+  },
+  "clean_trader.csv": {
+    "data_nature": "synthetic_test_scenario",
+    "expected_trades": 10,
+    "total_trades": 10,
+    "expected_rapid_reentry_trades": 0,
+    "expected_busy_days": 0,
+    "expiry_trades_count": 0,
+    "winning_trades_count": 5,
+    "losing_trades_count": 5,
+    "total_net_pnl": 0.0,
+    "note": "Synthetic test dataset: One trade per day for 10 dates with alternating +50 and -50; no rapid re-entry, no high-activity days. Confirms zero false positive detections."
+  },
+  "tiny_sample.csv": {
+    "data_nature": "synthetic_test_scenario",
+    "expected_trades": 8,
+    "total_trades": 8,
+    "is_insufficient_sample": true,
+    "min_sample_threshold": 10,
+    "total_net_pnl": 0.0,
+    "note": "Synthetic test dataset: Exactly 8 trades (< 10 threshold) designed to trigger insufficient-data warnings."
+  }
+}

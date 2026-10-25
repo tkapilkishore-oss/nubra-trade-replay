@@ -1,0 +1,4 @@
+trade_id,date,entry_time,symbol,entry_price,exit_price,charges,is_expiry_day
+Q001,2026-09-01,09:30:00,NIFTY_25000_CE,120.0,135.0,25.0,False
+Q002,2026-09-01,10:00:00,NIFTY_25000_PE,95.0,88.0,20.0,True
+Q003,2026-09-02,09:45:00,BANKNIFTY_52000_CE,310.0,325.0,30.0,False
