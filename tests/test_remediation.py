@@ -284,7 +284,7 @@ def test_browser_persistence_helpers():
     assert decompress_csv_data("not_valid_base64_or_zlib!!!") is None
     assert decompress_csv_data("") is None
 
-    # Fresh visit session-state defaults & dataset-switching resolution
+    # Fresh visit session-state defaults & committed-rule persistence roundtrip
     # Executed in an isolated subprocess to prevent Streamlit's runtime script loader
     # from reloading application modules and causing cross-test class identity divergence.
     import subprocess
@@ -292,10 +292,25 @@ def test_browser_persistence_helpers():
     from pathlib import Path
 
     app_path = str(Path(__file__).resolve().parent.parent / "app.py")
+    data_dir = str(Path(__file__).resolve().parent.parent / "data")
     test_subproc_code = f"""
+import io
+from pathlib import Path
+import docx
+import pandas as pd
+import pypdf
 from streamlit.testing.v1 import AppTest
 
-# 1. Fresh visit defaults
+from src.action_plan import (
+    build_report_context,
+    generate_action_plan_docx,
+    generate_action_plan_pdf,
+    get_rule_by_id,
+)
+from src.calculator import calculate_trade_pnl, compute_summary_metrics
+from src.detectors import generate_ranked_findings
+
+# 1. Fresh visit defaults: Persona B (high_activity)
 at_fresh = AppTest.from_file(r"{app_path}")
 at_fresh.run()
 assert not at_fresh.exception
@@ -303,38 +318,122 @@ assert at_fresh.session_state.get("selected_persona_key") == "high_activity"
 assert at_fresh.session_state.get("selected_rule_id") == "activity_ceiling"
 assert at_fresh.session_state.get("rule_confirmed") is False
 assert at_fresh.session_state.get("active_dataset_id") == "sample_high_activity"
+sb_fresh = [sb for sb in at_fresh.selectbox if "Select One Rule" in sb.label][0]
+assert sb_fresh.value == "activity_ceiling"
 
-# 2. Explicit persona query parameter
-at_persona_a = AppTest.from_file(r"{app_path}")
-at_persona_a.query_params["persona"] = "rapid_reentry"
-at_persona_a.run()
-assert not at_persona_a.exception
-assert at_persona_a.session_state.get("selected_persona_key") == "rapid_reentry"
-assert at_persona_a.session_state.get("selected_rule_id") == "cool_off"
+# 2. Interactive commitment flow on Persona A (rapid_reentry)
+at_a = AppTest.from_file(r"{app_path}")
+at_a.query_params["persona"] = "rapid_reentry"
+at_a.run()
+assert not at_a.exception
+assert at_a.session_state.get("selected_persona_key") == "rapid_reentry"
+assert at_a.session_state.get("rule_confirmed") is False
+assert at_a.session_state.get("selected_rule_id") == "cool_off"
 
-# 3. Dataset-change reset: transitioning to high_activity selects activity_ceiling
-at_reset_b = AppTest.from_file(r"{app_path}")
-at_reset_b.session_state["active_dataset_id"] = "sample_rapid_reentry"
-at_reset_b.session_state["selected_rule_id"] = "cool_off"
-at_reset_b.session_state["rule_confirmed"] = True
-at_reset_b.query_params["persona"] = "high_activity"
-at_reset_b.run()
-assert not at_reset_b.exception
-assert at_reset_b.session_state.get("active_dataset_id") == "sample_high_activity"
-assert at_reset_b.session_state.get("selected_rule_id") == "activity_ceiling"
-assert at_reset_b.session_state.get("rule_confirmed") is False
+# Interactively select alternative rule 'activity_ceiling' in the selectbox
+sb_rule_a = [sb for sb in at_a.selectbox if "Select One Rule" in sb.label][0]
+assert sb_rule_a.value == "cool_off"
+sb_rule_a.select("activity_ceiling")
+at_a.run()
+assert not at_a.exception
+assert sb_rule_a.value == "activity_ceiling"
 
-# 4. Dataset-change reset: transitioning to other personas selects cool_off
-at_reset_c = AppTest.from_file(r"{app_path}")
-at_reset_c.session_state["active_dataset_id"] = "sample_high_activity"
-at_reset_c.session_state["selected_rule_id"] = "activity_ceiling"
-at_reset_c.session_state["rule_confirmed"] = True
-at_reset_c.query_params["persona"] = "clean_trader"
-at_reset_c.run()
-assert not at_reset_c.exception
-assert at_reset_c.session_state.get("active_dataset_id") == "sample_clean_trader"
-assert at_reset_c.session_state.get("selected_rule_id") == "cool_off"
-assert at_reset_c.session_state.get("rule_confirmed") is False
+# Interactively click the habit commitment button
+commit_btn = [b for b in at_a.button if "Commit to Monitoring" in b.label][0]
+commit_btn.click()
+at_a.run()
+assert not at_a.exception
+
+# Assert state & query parameters were updated by the commit button
+assert at_a.session_state.get("rule_confirmed") is True
+assert at_a.session_state.get("selected_rule_id") == "activity_ceiling"
+assert at_a.query_params.get("committed") == "1"
+assert at_a.query_params.get("rule") == "activity_ceiling"
+assert at_a.query_params.get("dataset_id") == "sample_rapid_reentry"
+
+# 3. Simulate browser reload / restore persisted state
+persisted_params = dict(at_a.query_params)
+at_reloaded = AppTest.from_file(r"{app_path}")
+for k, v in persisted_params.items():
+    at_reloaded.query_params[k] = v
+at_reloaded.run()
+assert not at_reloaded.exception
+assert at_reloaded.session_state.get("selected_persona_key") == "rapid_reentry"
+assert at_reloaded.session_state.get("rule_confirmed") is True
+assert at_reloaded.session_state.get("selected_rule_id") == "activity_ceiling"
+sb_reloaded = [sb for sb in at_reloaded.selectbox if "Select One Rule" in sb.label][0]
+assert sb_reloaded.value == "activity_ceiling"
+
+# Assert action plan download buttons are rendered on the reloaded page
+dl_buttons = at_reloaded.download_button
+assert len(dl_buttons) >= 2
+assert any("PDF" in b.label for b in dl_buttons)
+assert any("Word" in b.label or "Editable" in b.label for b in dl_buttons)
+
+# 4. Verify both PDF and DOCX use the committed alternative rule
+df_raw = pd.read_csv(Path(r"{data_dir}") / "rapid_reentry.csv")
+df_trades = calculate_trade_pnl(df_raw)
+metrics = compute_summary_metrics(df_trades)
+findings = generate_ranked_findings(df_trades)
+committed_rule = get_rule_by_id(at_reloaded.session_state.selected_rule_id)
+
+ctx = build_report_context(
+    dataset_label="Persona A (Rapid Re-entry)",
+    is_synthetic=True,
+    metrics=metrics,
+    findings=findings,
+    active_rule=committed_rule,
+    df_trades=df_trades,
+)
+assert ctx.explanation_mode == "user_custom"
+
+pdf_bytes = generate_action_plan_pdf(ctx)
+docx_bytes = generate_action_plan_docx(ctx)
+
+pdf_text = " ".join(" ".join(p.extract_text() for p in pypdf.PdfReader(io.BytesIO(pdf_bytes)).pages).split())
+assert "Daily Activity Checkpoint" in pdf_text
+assert "However, you have chosen to commit to Daily Activity Checkpoint" in pdf_text
+assert "Rapid Re-entry" in pdf_text
+
+doc = docx.Document(io.BytesIO(docx_bytes))
+docx_text = " ".join(p.text for p in doc.paragraphs) + " " + " ".join(c.text for t in doc.tables for r in t.rows for c in r.cells)
+assert "Daily Activity Checkpoint" in docx_text
+assert "However, you have chosen to commit to Daily Activity Checkpoint" in docx_text
+assert "Rapid Re-entry" in docx_text
+
+# 5. In-session dataset switching: verify previous committed rule does NOT leak
+for target_persona, expected_suggested_rule in [
+    ("high_activity", "activity_ceiling"),
+    ("expiry_pattern", "expiry_sizing"),
+    ("clean_trader", "maintain_discipline"),
+    ("tiny_sample", "maintain_discipline"),
+]:
+    # Start from an active session with Persona A and committed alternative rule
+    at_switch = AppTest.from_file(r"{app_path}")
+    at_switch.query_params["persona"] = "rapid_reentry"
+    at_switch.run()
+    sb_r = [s for s in at_switch.selectbox if "Select One Rule" in s.label][0]
+    sb_r.select("activity_ceiling")
+    at_switch.run()
+    [b for b in at_switch.button if "Commit to Monitoring" in b.label][0].click()
+    at_switch.run()
+    assert at_switch.session_state.get("rule_confirmed") is True
+    assert at_switch.session_state.get("selected_rule_id") == "activity_ceiling"
+
+    # Switch the dataset selector in-session to the new persona
+    sb_persona = [s for s in at_switch.selectbox if "Select Sample Trader Persona" in s.label][0]
+    sb_persona.select(target_persona)
+    at_switch.run()
+    assert not at_switch.exception
+    assert at_switch.session_state.get("selected_persona_key") == target_persona
+    assert at_switch.session_state.get("rule_confirmed") is False, f"{{target_persona}} leaked rule_confirmed=True"
+    assert at_switch.session_state.get("selected_rule_id") == expected_suggested_rule, (
+        f"{{target_persona}} leaked previous rule; expected {{expected_suggested_rule}}, got {{at_switch.session_state.get('selected_rule_id')}}"
+    )
+    sb_rule_new = [s for s in at_switch.selectbox if "Select One Rule" in s.label][0]
+    assert sb_rule_new.value == expected_suggested_rule, (
+        f"{{target_persona}} selectbox leaked previous rule; expected {{expected_suggested_rule}}, got {{sb_rule_new.value}}"
+    )
 """
     res = subprocess.run([sys.executable, "-c", test_subproc_code], capture_output=True, text=True)
     assert res.returncode == 0, f"AppTest session-state regression failed: {res.stderr}"

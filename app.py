@@ -981,7 +981,16 @@ suggested_rule_id = findings[0].suggested_rule_id if findings else "cool_off"
 all_rules = get_all_rules()
 
 rule_options = {r["id"]: f"{r['name']} ({r['category']})" for r in all_rules}
-default_index = list(rule_options.keys()).index(suggested_rule_id) if suggested_rule_id in rule_options else 0
+
+# If a rule has been confirmed/committed for this dataset, preserve it across reloads.
+# Otherwise, default to the dataset's suggested behavioral rule.
+if st.session_state.get("rule_confirmed") and st.session_state.get("selected_rule_id") in rule_options:
+    target_rule_id = st.session_state.selected_rule_id
+else:
+    target_rule_id = suggested_rule_id
+    st.session_state.selected_rule_id = suggested_rule_id
+
+default_index = list(rule_options.keys()).index(target_rule_id) if target_rule_id in rule_options else 0
 
 # Use dynamic key so Streamlit resets the widget when dataset changes
 selected_rule_key = st.selectbox(

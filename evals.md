@@ -17,8 +17,8 @@ Contains known examples of trades entered within 15 minutes of a preceding losin
 
 Expected result: The detector identifies the exact qualifying trade IDs (12 of 12 identified, +₹600 net P&L on flagged trades).
 
-### Persona B: High-Activity Trader
-Contains days with deliberately high trade counts and known daily net P&L.
+### Persona B: High-Activity Trader (Default Demo Persona)
+Contains days with deliberately high trade counts and known daily net P&L. A fresh visit to the application defaults to Persona B, demonstrating the high-activity losing days pattern and pre-selecting the Daily Activity Checkpoint (`activity_ceiling`) rule.
 
 Expected result: The detector identifies qualifying dates according to the documented activity threshold (2 of 2 high-activity losing days identified, -₹2,400 net P&L). Profitable high-activity days are distinguished and not flagged as losing days.
 

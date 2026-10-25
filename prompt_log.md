@@ -2938,3 +2938,159 @@ Provide:
 ```
 
 ---
+
+### Phase 17 — Documentation Cleanup & Evaluation Reconciliation
+
+- **Date**: 2026-10-25
+- **Type**: Verbatim Prompt
+- **Goal**: Targeted documentation-only cleanup before submission: reconcile 30 vs 45 vs 54 test count references in `evals.md`, audit E01–E27 table, and reconcile prompt history without modifying application code or test suites.
+- **Key Files**: `evals.md`, `prompt_log.md`
+- **Outcome**: Reconciled the 54-test automated suite (`run_tests.py`) with the 27 defined evaluation checks in Section 4. Explicitly documented that E28–E39 were never defined in the table. Clarified TestSprite cloud suite results: 11 passed, 2 failed, 2 blocked.
+- **Failures, Defects & Follow-ups**: None. Strict documentation-only constraints enforced.
+
+**Verbatim Prompt (`as-is`):**
+
+```markdown
+We need to make a targeted documentation-only cleanup of the Nubra Trade Replay project before submitting the Nubra Product Management Internship take-home assignment.
+
+CRITICAL: Do not modify application code, test code, test data, detector thresholds, sample CSVs, or app behaviour. Only edit evals.md and prompt_log.md. Do not deploy, commit, or push anything.
+
+Part 1 — Fix evals.md
+1. Reconcile test counts (resolve conflicting references to 30 vs 45 vs 54 tests).
+2. Clarify defined vs executed tests (table explicitly defines E01–E27; E28–E39 were not defined).
+3. Report TestSprite cloud suite results honestly: 11 passed, 2 failed, 2 blocked.
+4. Distinguish synthetic benchmark precision from real-world statistical efficacy.
+
+Part 2 — Reconcile prompt_log.md
+Ensure authentic prompts and retrospective summaries are clearly labelled without fabricating missing text.
+```
+
+---
+
+### Phase 18 — Public Deployment Verification & Accuracy Review
+
+- **Date**: 2026-10-25
+- **Type**: Verbatim Prompt
+- **Goal**: Verify documentation parity following user deployment to Streamlit Community Cloud at `https://nubra-trade-replay.streamlit.app/`.
+- **Key Files**: `evals.md`, `prompt_log.md`
+- **Outcome**: Updated E22 in `evals.md` to document that the user manually opened the live deployed application in an external browser and confirmed main functionality. Explicitly stated that no automated production audit was performed.
+- **Failures, Defects & Follow-ups**: Headless programmatic verification via browser automation was constrained by Streamlit Cloud's OAuth redirect / WebSocket requirements, requiring reliance on user manual smoke testing.
+
+**Verbatim Prompt (`as-is`):**
+
+```markdown
+We have now deployed Nubra Trade Replay to:
+https://nubra-trade-replay.streamlit.app/
+I have manually opened the deployed app and verified that its main functionality works.
+Please perform a narrow review of the recent documentation cleanup.
+Inspect git diff -- evals.md prompt_log.md. Do not overwrite the documents or discard any existing work.
+Compare the test counts and cloud-suite results against the existing QA reports and run_tests.py.
+Verify that prompt_log.md clearly distinguishes verbatim recovered prompts from retrospective summaries. Do not invent missing prompts.
+Update E22 in evals.md to reflect the new deployment evidence. State that the user manually verified the public app and its main functionality. Do not claim an independent automated production audit or a new test run.
+Preserve the distinction between the 54 automated regression tests, the 27 formal evaluation cases, and the TestSprite cloud results.
+Do not modify application code, detector thresholds, or tests.
+```
+
+---
+
+### Phase 19 — Read-Only Product Quality Audit
+
+- **Date**: 2026-10-25
+- **Type**: Verbatim Prompt
+- **Goal**: Conduct an in-depth read-only product quality review across 5 dimensions: demo narrative, insight quality, edge case handling, action plan document parity, and documentation/deployment consistency.
+- **Key Files**: `app.py`, `src/detectors.py`, `src/action_plan.py`, `data/*.csv`
+- **Outcome**: Produced comprehensive audit findings identifying:
+  1. Default persona was `rapid_reentry`, which had positive net P&L (+₹600) on flagged trades and could confuse first-time evaluators; recommended switching default to `high_activity` (Persona B) with -₹2,400 net loss.
+  2. Latent currency formatting bug in `high_activity` finding summary displaying `₹-2,400.00` instead of `-₹2,400.00`.
+  3. ReportLab font fallback limitation rendering square replacement glyphs on Linux when the rupee glyph (`₹`) is unavailable.
+  4. Missing CSV compatibility notice explaining the 10 required columns and same-day round-trip constraints.
+  5. Latent session-state reset bug in `app.py` line 523 hardcoding `selected_rule_id = "cool_off"`.
+- **Failures, Defects & Follow-ups**: Read-only audit; zero file modifications allowed.
+
+**Verbatim Prompt (`as-is`):**
+
+```markdown
+We are entering the final product-quality phase for Nubra Trade Replay, a PM internship take-home assignment.
+Live app: https://nubra-trade-replay.streamlit.app/
+GitHub: https://github.com/tkapilkishore-oss/nubra-trade-replay
+Do a focused, READ-ONLY product audit. Do not edit files, change thresholds, run a full test suite, commit, push, or deploy.
+Inspect the actual current source code and report findings for these five questions:
+1. Demo narrative: Which sample persona is selected by default? What exact patterns and P&L does it display? Does the UI incorrectly imply that every detected pattern caused losses? Identify the best existing persona for the first demo screen. Do not change the data or detector to manufacture a better result.
+2. Insight quality: For each detector, explain its trigger threshold, minimum sample requirements, supporting evidence, and how the UI describes the result. Identify any wording that overstates conclusions or lacks clarity.
+3. Edge cases: Trace how the app handles 0 trades, 1 trade, and small samples. Does it crash, divide by zero, or produce misleading insights?
+4. Action plan review: Inspect the generated PDF and DOCX reports. Do they accurately reflect the selected persona, metrics, evidence table, and disclosures?
+5. Parity: Compare the current code against the product spec and README. Note any discrepancies between documentation, local behavior, and deployed expectations.
+```
+
+---
+
+### Phase 20 — Targeted Fixes: Demo Persona, Currency Formatting & CSV Notice
+
+- **Date**: 2026-10-25
+- **Type**: Verbatim Prompt
+- **Goal**: Implement targeted fixes from the read-only audit: switch default demo persona to `high_activity`, fix negative currency formatting (`-₹2,400.00`), add PDF rupee font fallback (`Rs. `), and add CSV compatibility notice.
+- **Key Files**: `app.py`, `src/detectors.py`, `src/action_plan.py`, `tests/test_detectors.py`, `tests/test_action_plan.py`
+- **Outcome**: Successfully modified `app.py` to default to `high_activity` with `activity_ceiling`, added the sidebar CSV compatibility callout, corrected `high_activity` finding formatting in `src/detectors.py`, and implemented `clean_currency_text` rupee font fallback to `Rs. ` in `src/action_plan.py`. Added unit and regression tests.
+- **Failures, Defects & Follow-ups**: Latent session-state reset at line 523 remained hardcoded to `cool_off`, identified for subsequent fix.
+
+**Verbatim Prompt (`as-is`):**
+
+```markdown
+Implement only the following targeted fixes in the existing Nubra Trade Replay project, based on the completed read-only audit.
+
+1. Change the default demo persona
+- Change the default persona from rapid_reentry to high_activity wherever the initial/default persona is set.
+- Preserve explicit persona selection through URL parameters and the existing persona selector.
+- Verify that a fresh app visit shows Persona B and its high-activity losing-days insight.
+- Do not change any underlying synthetic trade data or P&L calculations.
+
+2. Fix negative currency formatting
+- In src/detectors.py, correct the high-activity finding summary so a negative total is displayed as -₹2,400.00, not ₹-2,400.00.
+- In src/action_plan.py, ensure PDF narrative text replaces the rupee glyph with Rs. when the required rupee font is unavailable.
+- Preserve proper rupee formatting when a suitable font is available.
+- Add or update regression tests for both cases.
+
+3. Explain CSV compatibility
+- In the upload sidebar, add a concise note explaining supported CSV requirements:
+  - 10 required columns
+  - Must be completed intraday round-trip trades
+  - Pre-matched orders (not raw execution logs)
+- Keep the notice clean, professional, and consistent with the dark theme.
+
+4. Validate
+- Run the full test suite (python run_tests.py).
+- Verify git diff --check is clean.
+- Do not modify datasets, detector thresholds, or evaluation tables.
+- Do not commit, push, or deploy.
+```
+
+---
+
+### Phase 21 — Session-State Reset Fix & Pre-Commit Review
+
+- **Date**: 2026-10-25
+- **Type**: Verbatim Prompt
+- **Goal**: Make one minimal fix in `app.py` around line 523 replacing hardcoded `selected_rule_id = "cool_off"` with `activity_ceiling` when `current_dataset_id == "sample_high_activity"`, add a regression test, run the test suite, and commit/push.
+- **Key Files**: `app.py`, `tests/test_remediation.py`
+- **Outcome**: Replaced hardcoded `"cool_off"` reset with conditional selection. Added regression test in `tests/test_remediation.py`. Committed (`bae0b02`) and pushed to GitHub `origin/main`.
+- **Failures, Defects & Lessons Learned**:
+  - *Failed Approach*: Running Streamlit's `AppTest.from_file("app.py").run()` directly in-process within `test_browser_persistence_helpers()` caused Streamlit's internal script runner to re-import project modules. This created a new `ReportContext` class in `sys.modules["src.action_plan"]`, causing subsequent test T51 (`test_unified_pipeline_seeded_personas_parity`) to fail with `assert isinstance(ctx, ReportContext)` due to class object identity mismatch.
+  - *Fix & Recovery*: Isolated the `AppTest` execution in a `subprocess.run([sys.executable, "-c", ...])` invocation. This allowed complete end-to-end testing of Streamlit session state and query parameter lifecycle while preventing module re-import contamination in the main test runner. All 54 tests passed cleanly.
+
+**Verbatim Prompt (`as-is`):**
+
+```markdown
+Make one minimal fix in app.py for the latent session-state reset identified during the read-only review.
+
+At the dataset-change reset around line 523, replace the hardcoded st.session_state.selected_rule_id = "cool_off" with logic that selects "activity_ceiling" when current_dataset_id == "sample_high_activity" and otherwise selects "cool_off".
+
+Preserve existing behaviour for the other personas and custom uploaded datasets. Inspect how selected_rule_id is subsequently used to ensure this change doesn't create a rule-selection regression.
+
+Add a focused regression test if practical, then run:
+- python run_tests.py
+- git diff --check
+
+Do not commit, push, or deploy. Report the exact diff and test results.
+```
+
+---

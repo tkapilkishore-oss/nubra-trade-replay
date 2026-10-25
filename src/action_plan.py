@@ -570,7 +570,7 @@ def generate_action_plan_pdf(
         synth_box = Table(
             [[
                 Paragraph(
-                    "<b>⚠️ Synthetic Demonstration Data:</b> This action plan was generated from a synthetic "
+                    "<b>Synthetic Demonstration Data:</b> This action plan was generated from a synthetic "
                     f"demonstration tradebook (<b>{safe_text(dataset_label)}</b>) designed to demonstrate behavioral "
                     "habit monitoring under controlled conditions. It does not reflect live account trading history.",
                     callout_style,
@@ -616,7 +616,7 @@ def generate_action_plan_pdf(
         sample_box = Table(
             [[
                 Paragraph(
-                    f"<b>⚠️ Low-Confidence Notice (Small Sample):</b> The reviewed dataset contains only "
+                    f"<b>Low-Confidence Notice (Small Sample):</b> The reviewed dataset contains only "
                     f"<b>{metrics.total_trades} completed trades</b> (&lt; 10 trades). Statistical identification of "
                     f"recurring habits requires larger trade samples. Interpret baseline numbers as exploratory.",
                     callout_style,
@@ -1314,7 +1314,7 @@ def generate_action_plan_docx(
     if is_synthetic:
         p_syn = doc.add_paragraph()
         run_syn = p_syn.add_run(
-            f"⚠️ Synthetic Demonstration Data: This action plan was generated from a synthetic "
+            f"Synthetic Demonstration Data: This action plan was generated from a synthetic "
             f"demonstration tradebook ({dataset_label}) for habit-monitoring and educational purposes. "
             f"It does not reflect live account trading history."
         )
@@ -1332,7 +1332,7 @@ def generate_action_plan_docx(
     if metrics.is_small_sample:
         p_sam = doc.add_paragraph()
         run_sam = p_sam.add_run(
-            f"⚠️ Low-Confidence Notice (Small Sample): The reviewed dataset contains only {metrics.total_trades} completed trades "
+            f"Low-Confidence Notice (Small Sample): The reviewed dataset contains only {metrics.total_trades} completed trades "
             f"(< 10 trades). Statistical identification of recurring habits requires larger trade samples."
         )
         run_sam.font.color.rgb = RGBColor(220, 38, 38)
