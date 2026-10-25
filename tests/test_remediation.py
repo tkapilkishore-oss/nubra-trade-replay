@@ -505,6 +505,96 @@ assert at_mismatch.query_params.get("dataset_id") == "sample_high_activity"
 sb_rule_mismatch = [s for s in at_mismatch.selectbox if "Select One Rule" in s.label][0]
 assert sb_rule_mismatch.value == "activity_ceiling"
 assert at_mismatch.session_state.get("selected_rule_id") == "activity_ceiling"
+
+# Step G: Data source switching with single interaction each and total state isolation
+at_ds = AppTest.from_file(r"{app_path}")
+at_ds.query_params["persona"] = "rapid_reentry"
+at_ds.run()
+assert not at_ds.exception
+assert at_ds.session_state.get("data_mode") == "sample"
+assert at_ds.session_state.get("selected_persona_key") == "rapid_reentry"
+assert at_ds.session_state.get("active_dataset_id") == "sample_rapid_reentry"
+assert any("Select Sample Trader Persona" in s.label for s in at_ds.selectbox)
+assert not any("Upload Tradebook CSV" in u.label for u in at_ds.file_uploader)
+
+# Commit a habit rule on Persona A
+sb_r_ds = [s for s in at_ds.selectbox if "Select One Rule" in s.label][0]
+sb_r_ds.select("activity_ceiling")
+at_ds.run()
+[b for b in at_ds.button if "Commit to Monitoring" in b.label][0].click()
+at_ds.run()
+assert at_ds.session_state.get("rule_confirmed") is True
+assert at_ds.session_state.get("selected_rule_id") == "activity_ceiling"
+assert at_ds.query_params.get("committed") == "1"
+assert at_ds.query_params.get("rule") == "activity_ceiling"
+
+# 1. Synthetic source -> Upload source with a SINGLE radio interaction
+radio_ds = [r for r in at_ds.radio if "Choose Data Source" in r.label][0]
+radio_ds.set_value("upload")
+at_ds.run()
+assert not at_ds.exception
+
+# Assert immediate synchronization after first rerun: committed rule cleared, no leak
+assert at_ds.session_state.get("data_mode") == "upload"
+assert at_ds.query_params.get("mode") == "upload"
+assert at_ds.session_state.get("active_dataset_id") == "upload_none"
+assert at_ds.query_params.get("dataset_id") == "upload_none"
+assert at_ds.session_state.get("rule_confirmed") is False
+assert at_ds.query_params.get("committed") == "0"
+assert at_ds.query_params.get("rule") is None
+assert any("Upload Tradebook CSV" in u.label for u in at_ds.file_uploader)
+assert not any("Select Sample Trader Persona" in s.label for s in at_ds.selectbox)
+
+# Upload a valid CSV in upload mode
+uploader_ds = [u for u in at_ds.file_uploader if "Upload Tradebook CSV" in u.label][0]
+sample_clean_bytes = (Path(r"{data_dir}") / "clean_trader.csv").read_bytes()
+uploader_ds.upload("clean_trader.csv", sample_clean_bytes, "text/csv")
+at_ds.run()
+assert not at_ds.exception
+assert at_ds.session_state.get("active_dataset_id") == f"upload_clean_trader.csv_{{len(sample_clean_bytes)}}"
+assert any("Portfolio Review Overview" in m.value for m in at_ds.markdown)
+
+# 2. Upload source -> Synthetic source with a SINGLE radio interaction
+radio_ds = [r for r in at_ds.radio if "Choose Data Source" in r.label][0]
+radio_ds.set_value("sample")
+at_ds.run()
+assert not at_ds.exception
+
+# Assert immediate synchronization after first rerun: restored to Persona A without rule leakage
+assert at_ds.session_state.get("data_mode") == "sample"
+assert at_ds.query_params.get("mode") == "sample"
+assert at_ds.session_state.get("selected_persona_key") == "rapid_reentry"
+assert at_ds.session_state.get("active_dataset_id") == "sample_rapid_reentry"
+assert at_ds.session_state.get("selected_rule_id") == "cool_off"
+assert at_ds.session_state.get("rule_confirmed") is False
+assert at_ds.query_params.get("committed") == "0"
+assert at_ds.query_params.get("rule") is None
+assert any("Select Sample Trader Persona" in s.label for s in at_ds.selectbox)
+assert not any("Upload Tradebook CSV" in u.label for u in at_ds.file_uploader)
+sb_rule_restored = [s for s in at_ds.selectbox if "Select One Rule" in s.label][0]
+assert sb_rule_restored.value == "cool_off"
+
+# 3. Persona A -> Persona B in single selection (ensuring existing persona fix remains intact)
+sb_p_ds = [s for s in at_ds.selectbox if "Select Sample Trader Persona" in s.label][0]
+sb_p_ds.select("high_activity")
+at_ds.run()
+assert not at_ds.exception
+assert at_ds.session_state.get("selected_persona_key") == "high_activity"
+assert at_ds.session_state.get("active_dataset_id") == "sample_high_activity"
+assert at_ds.session_state.get("selected_rule_id") == "activity_ceiling"
+assert at_ds.session_state.get("rule_confirmed") is False
+assert at_ds.query_params.get("persona") == "high_activity"
+
+# 4. Refresh / URL restoration for upload mode
+at_upload_refresh = AppTest.from_file(r"{app_path}")
+at_upload_refresh.query_params["mode"] = "upload"
+at_upload_refresh.run()
+assert not at_upload_refresh.exception
+assert at_upload_refresh.session_state.get("data_mode") == "upload"
+radio_u = [r for r in at_upload_refresh.radio if "Choose Data Source" in r.label][0]
+assert radio_u.value == "upload"
+assert any("Upload Tradebook CSV" in u.label for u in at_upload_refresh.file_uploader)
+assert not any("Select Sample Trader Persona" in s.label for s in at_upload_refresh.selectbox)
 """
     res = subprocess.run([sys.executable, "-c", test_subproc_code], capture_output=True, text=True)
     assert res.returncode == 0, f"AppTest session-state regression failed: {res.stderr}"

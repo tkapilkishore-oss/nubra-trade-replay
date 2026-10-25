@@ -342,10 +342,15 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("#### 1. Data Selection")
 
+    data_source_labels = {
+        "sample": "Synthetic Sample Trader",
+        "upload": "Upload Completed Tradebook CSV",
+    }
     data_source = st.radio(
         "Choose Data Source:",
-        options=["Synthetic Sample Trader", "Upload Completed Tradebook CSV"],
-        index=0 if st.session_state.data_mode == "sample" else 1,
+        options=list(data_source_labels.keys()),
+        format_func=lambda k: data_source_labels[k],
+        key="data_mode",
         help="Select one of 5 synthetic benchmark personas or upload your own CSV.",
     )
 
@@ -355,8 +360,7 @@ with st.sidebar:
     dataset_description = ""
     current_dataset_id = ""
 
-    if data_source == "Synthetic Sample Trader":
-        st.session_state.data_mode = "sample"
+    if data_source == "sample":
         st.query_params["mode"] = "sample"
         is_synthetic = True
 
@@ -399,7 +403,6 @@ with st.sidebar:
         )
 
     else:
-        st.session_state.data_mode = "upload"
         st.query_params["mode"] = "upload"
         is_synthetic = False
         dataset_label = "Custom Uploaded Tradebook"
